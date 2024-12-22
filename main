@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Puzzle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f7f7f7;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .example-container, .puzzle-container {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+        }
+
+        .piece {
+            width: 100px;
+            height: 100px;
+            background-size: 300px 300px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            background: #ccc;
+        }
+
+        .example-container .piece {
+            cursor: default;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #successMessage {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Photo Puzzle Game</h1>
+    <div class="game-container">
+        <div class="example-container" id="exampleContainer"></div>
+        <div class="puzzle-container" id="puzzleContainer"></div>
+    </div>
+    <button onclick="shufflePieces()">Shuffle</button>
+    <p id="successMessage">Yeyy, keren sayangku! ❤️</p>
+
+    <script>
+        const imageSrc = 'aku.jpg'; // Replace with the path to your image
+        const puzzleContainer = document.getElementById('puzzleContainer');
+        const exampleContainer = document.getElementById('exampleContainer');
+        const successMessage = document.getElementById('successMessage');
+        let pieces = [];
+
+        function createPuzzle() {
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const examplePiece = document.createElement('div');
+                    examplePiece.classList.add('piece');
+                    examplePiece.style.backgroundImage = `url(${imageSrc})`;
+                    examplePiece.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+                    exampleContainer.appendChild(examplePiece);
+
+                    const puzzlePiece = document.createElement('div');
+                    puzzlePiece.classList.add('piece');
+                    puzzlePiece.style.backgroundImage = `url(${imageSrc})`;
+                    puzzlePiece.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
+                    puzzlePiece.dataset.position = `${row}-${col}`;
+                    puzzlePiece.addEventListener('click', () => swapPiece(puzzlePiece));
+                    pieces.push(puzzlePiece);
+                    puzzleContainer.appendChild(puzzlePiece);
+                }
+            }
+
+            // Hide one piece to create the empty space
+            const hiddenPiece = pieces.pop();
+            hiddenPiece.classList.add('hidden');
+        }
+
+        function shufflePieces() {
+            successMessage.style.display = 'none';
+            // Shuffle pieces array
+            pieces = pieces.sort(() => Math.random() - 0.5);
+
+            // Clear the container and re-add shuffled pieces
+            puzzleContainer.innerHTML = '';
+            pieces.forEach(piece => puzzleContainer.appendChild(piece));
+        }
+
+        function swapPiece(clickedPiece) {
+            const hiddenPiece = document.querySelector('.hidden');
+            const hiddenIndex = Array.from(puzzleContainer.children).indexOf(hiddenPiece);
+            const clickedIndex = Array.from(puzzleContainer.children).indexOf(clickedPiece);
+
+            // Check if the clicked piece is adjacent to the hidden piece
+            if (
+                Math.abs(clickedIndex - hiddenIndex) === 1 ||
+                Math.abs(clickedIndex - hiddenIndex) === 3
+            ) {
+                // Swap positions in the DOM
+                puzzleContainer.insertBefore(hiddenPiece, clickedPiece);
+                puzzleContainer.insertBefore(clickedPiece, puzzleContainer.children[hiddenIndex]);
+
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            const currentOrder = Array.from(puzzleContainer.children).map(
+                piece => piece.dataset.position || ''
+            );
+            const correctOrder = pieces.map(piece => piece.dataset.position);
+
+            if (JSON.stringify(currentOrder) === JSON.stringify(correctOrder)) {
+                successMessage.style.display = 'block';
+            }
+        }
+
+        createPuzzle();
+        shufflePieces();
+    </script>
+</body>
+</html>
